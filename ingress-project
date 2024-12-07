@@ -1,0 +1,247 @@
+Ingress and ingress controller project.
+======================================
+
+--> what is Ingress: it's basically allows external users access to your application using single externally accessible url 
+	which you can configure to different service backend based on the url paths /
+
+--> For this project, I'm using Minikube cluster which also runs both the controlplane and the cluster nodes. 
+	
+Ex:  kubectl get nodes -owide
+
+NAME       STATUS   ROLES           AGE   VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION     CONTAINER-RUNTIME
+minikube   Ready    control-plane   2d    v1.31.0   192.168.49.2   <none>        Ubuntu 22.04.4 LTS   6.10.11-linuxkit   docker://27.2.0
+
+
+--> To have a working ingress, we will need an Ingress controller to satisfy ingress. 
+	so i will be using the built in minikube ingress controller which you can enable using below command 
+
+	Ex: minikube addons enable ingress
+
+	💡  ingress is an addon maintained by Kubernetes. For any concerns contact minikube on GitHub.
+	You can view the list of minikube maintainers at: https://github.com/kubernetes/minikube/blob/master/OWNERS
+	💡  After the addon is enabled, please run "minikube tunnel" and your ingress resources would be available at "127.0.0.1"
+	▪ Using image registry.k8s.io/ingress-nginx/controller:v1.11.2
+	▪ Using image registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.4.3
+	▪ Using image registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.4.3
+	🔎  Verifying ingress addon...
+	🌟  The 'ingress' addon is enabled
+
+--> Once you enable the Ingress controller, we're good to implement the ingress project, which basically acts a load-balancer 
+	and fordwards external traffic to your cluster based on the url path. 
+
+
+--> Verify the ingress controller is working fine. 
+	
+	Ex: kubectl get pods -n ingress-nginx
+
+	NAME                                       READY   STATUS      RESTARTS      AGE
+	ingress-nginx-admission-create-rsmtw       0/1     Completed   0             28h
+	ingress-nginx-admission-patch-xqnrg        0/1     Completed   1             28h
+	ingress-nginx-controller-bc57996ff-25ldg   1/1     Running     1 (25h ago)   28h
+
+--> Deploy hello world app.
+	
+	Ex: kubectl create deployment web --image=gcr.io/google-samples/hello-app:1.0
+
+	--> confirm the pod is running.
+
+		 k get deploy 
+		NAME   READY   UP-TO-DATE   AVAILABLE   AGE
+		web    1/1     1            1           3s
+
+--> Next, expose the web application using external NodePort type.
+
+	Ex: k expose deploy web --port=8080 --type=NodePort 
+
+		k get svc -owide
+		NAME         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE     SELECTOR
+		kubernetes   ClusterIP   10.96.0.1       <none>        443/TCP          3m34s   <none>
+		web          NodePort    10.108.239.40   <none>        8080:31010/TCP   25s     app=web
+
+--> To visit the service via NodePort, using minikube service command. 
+	
+	Ex: minikube service web --url --> command is used to expose and retrieve external access for the backend service.
+		command is also alternative and convient way to access a service externally without manually fetching the minikube ip and nodeport. 
+
+		Output:
+
+		http://127.0.0.1:50794
+		❗  Because you are using a Docker driver on darwin, the terminal needs to be open to run it.
+
+		Output for the web application once opened via the browser.
+
+			Hello, world!
+			Version: 1.0.0
+			Hostname: web-56b9569dcc-868fc
+
+--> It's time to access the application via the Ingress instead of the Service NodePort approach. 
+
+
+--> Create ingress:
+	
+	There's two ways of creating ingress in k8s, the Imperritive way or the declarive way where to declare the yaml definition file from scratch. 
+
+--> I will be using the imperritive way to quickly create ingress. 
+	also, anytime i have indoubt or not remembering a command, i usually go the K8s help examples, (k create ingress --help)
+	
+	command: kubectl create ingress example-ingress --class=nginx --rule="hello-world.example/=web:8080"
+
+			 output: ingress.networking.k8s.io/example-ingress created
+
+
+--> Using dry-run to quickly create the yaml file. 
+
+kubectl create ingress example-ingress --class=nginx --rule="hello-world.example/=web:8080" --dry-run=client -oyaml 
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  creationTimestamp: null
+  name: example-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: hello-world.example
+    http:
+      paths:
+      - backend:
+          service:
+            name: web
+            port:
+              number: 8080
+        path: /
+        pathType: Exact
+status:
+  loadBalancer: {}
+
+
+--> Verify the Ip address is set for the ingress
+	
+	k get ing 
+	NAME              CLASS   HOSTS                 ADDRESS        PORTS   AGE
+	example-ingress   nginx   hello-world.example   192.168.49.2   80      2m26s
+
+--> Note: The network is limited if using the Docker driver on MacOS (Darwin) and the Node IP is not reachable directly. 
+
+	Solution: Open different terminal and run the below command
+
+	minikube tunnel
+
+	Output: 
+
+	✅  Tunnel successfully started
+
+	📌  NOTE: Please do not close this terminal as this process must stay alive for the tunnel to be accessible ...
+
+	❗  The service/ingress example-ingress requires privileged ports to be exposed: [80 443]
+	🔑  sudo permission will be asked for it.
+	🏃  Starting tunnel for service example-ingress.
+
+
+--> Test and check if ingress is working.
+
+	curl --resolve "hello-world.example:80:127.0.0.1" -i http://hello-world.example
+	HTTP/1.1 200 OK
+	Date: Sat, 07 Dec 2024 05:02:42 GMT
+	Content-Type: text/plain; charset=utf-8
+	Content-Length: 60
+	Connection: keep-alive
+
+	Hello, world!
+	Version: 1.0.0
+	Hostname: web-56b9569dcc-868fc
+
+--> Also, to acces the application via browser, i used port fordwarding 
+	
+	kubectl port-forward svc/web 8080
+	Forwarding from 127.0.0.1:8080 -> 8080
+	Forwarding from [::1]:8080 -> 8080
+	Handling connection for 8080
+
+	--> recieved the same output
+
+
+--> Create another deployment, 
+
+	kubectl create deployment web2 --image=gcr.io/google-samples/hello-app:2.0
+
+	output: 
+
+	k get deploy -owide
+	NAME   READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                                SELECTOR
+	web    1/1     1            1           42m   hello-app    gcr.io/google-samples/hello-app:1.0   app=web
+	web2   1/1     1            1           13s   hello-app    gcr.io/google-samples/hello-app:2.0   app=web2
+
+
+--> Expose the App. 
+	
+	kubectl expose deployment web2 --port=8080 --type=NodePort
+	service/web2 exposed
+
+--> Edit the inrgess file and another service and path as well.
+
+	k create -f ingress.yml
+	ingress.networking.k8s.io/example-ingress created
+
+cat ingress.yml
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  creationTimestamp: null
+  name: example-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: hello-world.example
+    http:
+      paths:
+      - backend:
+          service:
+            name: web
+            port:
+              number: 8080
+        path: /
+        pathType: Exact
+      - backend:
+          service:
+            name: web2
+            port:
+              number: 8080
+        path: /app2
+        pathType: Exact
+status:
+  loadBalancer: {}
+
+
+--> Same process above to access the ingress service using Minikube tunnel 
+	
+	minikube tunnel
+
+	curl --resolve "hello-world.example:80:127.0.0.1" -i http://hello-world.example
+	HTTP/1.1 200 OK
+	Date: Sat, 07 Dec 2024 05:22:08 GMT
+	Content-Type: text/plain; charset=utf-8
+	Content-Length: 60
+	Connection: keep-alive
+
+	Hello, world!
+	Version: 1.0.0
+	Hostname: web-56b9569dcc-868fc
+
+
+--> Access the app2 path/ using below command 
+	
+	curl --resolve "hello-world.example:80:127.0.0.1" -i http://hello-world.example/app2
+	HTTP/1.1 200 OK
+	Date: Sat, 07 Dec 2024 05:24:13 GMT
+	Content-Type: text/plain; charset=utf-8
+	Content-Length: 61
+	Connection: keep-alive
+
+	Hello, world!
+	Version: 2.0.0
+	Hostname: web2-6445c79948-9tqn7
+
+
+COMPLETE. 
+
