@@ -1,0 +1,222 @@
+Kubernetes Network Policy:
+
+--> Simple K8s Network Policy Implementations.
+--> I'm using killercoda playground cluster which contains two nodes including the controlplane.
+
+-> Create a simple nginx server 
+-> Expose the nginx application over the network using external http/https traffic using K8s service object
+-> Access the nginx service from a different application/pod, in this case using busybox app 
+-> Confirm the pod is accessible without any isolations from each pod
+-> Apply network policy on the nginx pod, including podselector label 
+-> Once applied netpol, the nginx service should'nt be accessible to other pods, expect the specified matching labels
+
+
+Creating Network Policy. 
+=======================
+
+controlplane $ k get no
+NAME           STATUS   ROLES           AGE     VERSION
+controlplane   Ready    control-plane   5d19h   v1.31.0
+node01         Ready    <none>          5d19h   v1.31.0
+
+--> Created nginx deployment with two replicas 
+
+controlplane $ k create deploy nginx --image=nginx --replicas=2 
+deployment.apps/nginx created
+
+-> verify pods are running 
+
+controlplane $ k get po 
+NAME                     READY   STATUS    RESTARTS   AGE
+nginx-676b6c5bbc-97c6r   1/1     Running   0          34s
+nginx-676b6c5bbc-qffzj   1/1     Running   0          34s
+
+
+--> Expose the nginx deployment using k8s service object, I'm using commands to create this.
+
+controlplane $ k expose deploy nginx --port=80 --type=NodePort 
+service/nginx exposed
+
+-> verify the service is running.
+
+controlplane $ k get svc
+NAME         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+kubernetes   ClusterIP   10.96.0.1       <none>        443/TCP        2m52s
+nginx        NodePort    10.108.63.107   <none>        80:30229/TCP   59s
+
+-> YAML definition file.
+
+controlplane $ k get svc nginx -oyaml 
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: "2024-12-12T05:02:03Z"
+  labels:
+    app: nginx
+  name: nginx
+  namespace: default
+  resourceVersion: "11579"
+  uid: 4b61be55-9c6c-4154-8cd5-ae6e9bb49588
+spec:
+  clusterIP: 10.108.63.107
+  clusterIPs:
+  - 10.108.63.107
+  externalTrafficPolicy: Cluster
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - nodePort: 30229
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: nginx
+  sessionAffinity: None
+  type: NodePort
+status:
+  loadBalancer: {}
+
+
+--> Create a test busybox pod.
+
+controlplane $ k run busybox --image=busybox --command -- sleep 3600
+pod/buysbox created
+
+controlplane $ k get po 
+NAME                     READY   STATUS    RESTARTS   AGE
+busybox                  1/1     Running   0          14s
+nginx-676b6c5bbc-97c6r   1/1     Running   0          4m11s
+nginx-676b6c5bbc-qffzj   1/1     Running   0          4m11s
+
+-> Get into the busybox shell and run wget to test the network communication between pods {nginx & busybox}
+
+controlplane $ k exec -it busybox -- sh 
+/ # 
+/ # 
+/ # wget nginx
+Connecting to nginx (10.109.139.112:80)
+saving to 'index.html'
+index.html           100% |**********************************************************************************************************|   615  0:00:00 ETA
+'index.html' saved
+
+
+--> Now, implement network policy to restrict communication between pods/resources in K8s cluster. 
+
+controlplane $ k create -f netpol.yml 
+networkpolicy.networking.k8s.io/admin-nginx created
+
+controlplane $ 
+controlplane $ k get netpol 
+NAME          POD-SELECTOR   AGE
+admin-nginx   app=nginx      8s
+controlplane $ 
+
+controlplane $ k get netpol admin-nginx -oyaml 
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  creationTimestamp: "2024-12-12T05:10:02Z"
+  generation: 1
+  name: admin-nginx
+  namespace: default
+  resourceVersion: "9185"
+  uid: c2fdfe9d-c0de-405d-bc8c-51beb7172428
+spec:
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          access: admin
+  podSelector:
+    matchLabels:
+      app: nginx
+  policyTypes:
+  - Ingress
+
+
+ --> Run the same test again, wget should fail since network policy is applied on the nginx deployment.
+
+ / # wget nginx
+Connecting to nginx (10.109.139.112:80)
+wget: can't connect to remote host (10.109.139.112): Connection timed out
+
+
+--> This time lets add the matchlabels for the busybox pod, so im able to access nginx app with no restrictions.
+
+controlplane $ k delete pod busybox --force 
+Warning: Immediate deletion does not wait for confirmation that the running resource has been terminated. The resource may continue to run on the cluster indefinitely.
+pod "busybox" force deleted
+
+controlplane $ 
+controlplane $ k run busybox --image=busybox --labels="access=admin" --command -- sleep 3600 
+pod/busybox created
+
+controlplane $ k get po 
+NAME                     READY   STATUS    RESTARTS   AGE
+busybox                  1/1     Running   0          4s
+nginx-676b6c5bbc-ck7rr   1/1     Running   0          13m
+nginx-676b6c5bbc-dn2t7   1/1     Running   0          13m
+
+controlplane $ k exec -it busybox -- sh 
+/ # 
+/ # wget nginx 
+Connecting to nginx (10.109.139.112:80)
+saving to 'index.html'
+index.html           100% |**********************************************************************************************************|   615  0:00:00 ETA
+'index.html' saved
+
+COMPLETE. 
+
+
+
+KEYPOINTS:
+=========
+
+
+
+
+ChatGPT said:
+ChatGPT
+Key Points:
+
+    Cluster Setup:
+        Used Killercoda playground cluster with two nodes, including a control plane.
+
+    Nginx Deployment:
+        Created a simple Nginx deployment with two replicas using kubectl create deploy.
+        Exposed the Nginx application as a NodePort service for external HTTP traffic.
+
+    Service Validation:
+        Verified the service's ClusterIP and NodePort via kubectl get svc.
+        Successfully accessed the Nginx service from a BusyBox pod using wget.
+
+    Initial Unrestricted Communication:
+        Demonstrated open communication between the Nginx and BusyBox pods before applying network restrictions.
+
+    Network Policy Implementation:
+        Created a NetworkPolicy restricting ingress traffic to Nginx pods (app=nginx) to only pods with specific labels (access: admin).
+        Confirmed the policy blocked traffic from the BusyBox pod (default configuration).
+
+    Policy Validation:
+        Retested using wget from the BusyBox pod, which failed to connect after applying the NetworkPolicy, indicating successful restriction.
+
+    Label-Based Access Restoration:
+        Deleted the original BusyBox pod and redeployed it with the label access=admin.
+        Verified unrestricted access to the Nginx service after the label addition by successfully retrieving content using wget.
+
+    YAML Configurations Used:
+        Showed both Service and NetworkPolicy YAML outputs for clarity and debugging.
+
+    Outcome:
+        Demonstrated the impact of Kubernetes NetworkPolicies in controlling pod communication, showcasing how label-based selectors can be used to fine-tune access permissions in a cluster.
+
+Summary:
+
+This project illustrates the practical application of Kubernetes NetworkPolicies for managing inter-pod communication. It effectively showcases how to:
+
+    Deploy and expose applications.
+    Validate pod-to-pod connectivity.
+    Use NetworkPolicies for restricting and restoring access using label-based selectors.
+
