@@ -12,6 +12,6 @@ spec:
     targetPort: 8081
   selector:
     app: mongo-express
-  type: LoadBalancer
+  type: NodePort  
 status:
   loadBalancer: {}
