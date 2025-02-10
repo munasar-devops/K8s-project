@@ -34,4 +34,11 @@ spec:
             secretKeyRef:
               key: PASSWORD
               name: mongo-secret
+      volumeMounts:
+        - name: vol 
+          mountPath: /var/configs/mongo-logs 
+      volumes:
+      - name: vol 
+        persistentVolumeReclaimPolicy:
+          claimName: mongo-pvclaim 
 status: {}

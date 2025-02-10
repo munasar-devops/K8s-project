@@ -39,4 +39,11 @@ spec:
             configMapKeyRef:
               key: database_url
               name: mongo-config
+        volumeMounts:
+        - name: vol 
+          mountPath: /var/configs/express-logs 
+      volumes:
+      - name: vol 
+        persistentVolumeReclaimPolicy:
+          claimName: mongo-pvclaim 
 status: {}
