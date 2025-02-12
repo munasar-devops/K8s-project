@@ -3,8 +3,6 @@ kind: Ingress
 metadata:
   creationTimestamp: null
   name: argo-ingress
-  annotations: 
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
   ingressClassName: nginx
   rules:
@@ -17,6 +15,6 @@ spec:
             port:
               number: 443
         path: /
-        pathType: Exact
+        pathType: Prefix
 status:
   loadBalancer: {}
