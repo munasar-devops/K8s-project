@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: prod
+  name: prod
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: prod
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: prod
+    spec:
+      containers:
+      - image: nginx:alpine
+        name: nginx 
+        resources: {}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: environment
+                operator: In
+                values:
+                - production
+status: {}
