@@ -4,7 +4,7 @@ metadata:
   creationTimestamp: null
   labels:
     app: mongo-express
-  name: mongo-exporess-service
+  name: mongo-express-service
 spec:
   ports:
   - port: 8081

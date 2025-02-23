@@ -1,12 +1,12 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: test-netpol 
+  name: test-policy
   namespace: default
 spec:
   podSelector:
     matchLabels:
-      app:  pod2
+      app: db
   policyTypes:
   - Ingress
   - Egress
@@ -14,15 +14,23 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app: pod1 
+          app: bk
     ports:
-    - protocol: TCP 
-      port: 80 
+    - protocol: TCP
+      port: 80
+  - from:
+    - podSelector:
+        matchLabels:
+          app: ft
+    ports:
+    - protocol: TCP
+      port: 80
+
   egress:
   - to:
     - podSelector:
-       matchLabels:
-         app: pod1 
+        matchLabels:
+          app: bk
     ports:
-    - protocol: TCP 
-      port: 80 
+    - protocol: TCP
+      port: 80
