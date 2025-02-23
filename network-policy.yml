@@ -34,3 +34,63 @@ spec:
     ports:
     - protocol: TCP
       port: 80
+
+# backend pod manifest:
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    app: bk
+  name: backend
+spec:
+  containers:
+  - image: nginx
+    name: backend
+    ports:
+    - containerPort: 80
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+
+# frontend pod manifest:
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    app: ft
+  name: frontend
+spec:
+  containers:
+  - image: nginx
+    name: frontend
+    ports:
+    - containerPort: 80
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+
+# database pod manifest:
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    app: db
+  name: db
+spec:
+  containers:
+  - image: nginx
+    name: db
+    ports:
+    - containerPort: 80
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
