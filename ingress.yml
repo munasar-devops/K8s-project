@@ -21,3 +21,5 @@ spec:
         pathType: Prefix
 status:
   loadBalancer: {}
+# Nginx Ingress Controller manifest files.
+# kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
