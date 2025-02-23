@@ -26,6 +26,8 @@ spec:
     - protocol: TCP
       port: 80
 
+  # allowing outgoing network traffic from db to bk pod 
+  # by default this response is allowed and all pods can connect with db pod. 
   egress:
   - to:
     - podSelector:
