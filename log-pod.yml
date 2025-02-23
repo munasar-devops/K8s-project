@@ -13,3 +13,5 @@ spec:
   dnsPolicy: ClusterFirst
   restartPolicy: Always
 status: {}
+# pod will fail since the hosted docker image is private
+# please revert the changes in docker if want this pod to work. 
