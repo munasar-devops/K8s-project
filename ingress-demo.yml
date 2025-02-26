@@ -75,3 +75,6 @@ spec:
               number: 80
 status:
   loadBalancer: {}
+
+# Nginx-ingress controller manifest for testing.
+# kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
