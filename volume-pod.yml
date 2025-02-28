@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: busybox
+  name: busybox-volume 
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: busybox
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: busybox
+    spec:
+      containers:
+      - command:
+        - /bin/sh
+        - -c
+        - echo Hello kubernetes!, excited about the journey >> /data/k8s-config  && sleep 3600
+        image: busybox
+        name: busybox-volume 
+        resources: {}
+        volumeMounts:
+        - name: test-vol 
+          mountPath: /data/ 
+      volumes:
+      - name: test-vol 
+        hostPath: 
+          path: /data/tmp-config  
+          type: DirectoryOrCreate
+status: {}
