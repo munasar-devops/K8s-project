@@ -17,6 +17,6 @@ spec:
           - image: mabdi05/maghrib-notifier:latest
             name: iftar-job
             resources: {}
-          restartPolicy: OnFailure
+          restartPolicy: Never 
   schedule: 0 17 * * *
 status: {}

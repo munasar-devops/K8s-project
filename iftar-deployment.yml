@@ -6,7 +6,7 @@ metadata:
     app: iftar-deployment
   name: iftar-deployment
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: iftar-deployment
@@ -18,7 +18,10 @@ spec:
         app: iftar-deployment
     spec:
       containers:
-      - image: mabdi05/maghrib-notifier:latest
+      - command:
+        - sleep
+        - "3600"
+        image: mabdi05/maghrib-notifier:latest
         name: maghrib-notifier
         resources: {}
 status: {}
