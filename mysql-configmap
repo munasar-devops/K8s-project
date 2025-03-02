@@ -1,0 +1,7 @@
+apiVersion: v1
+data:
+  database: mysql-service
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: mysql-configmap

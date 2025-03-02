@@ -3,19 +3,19 @@ kind: Deployment
 metadata:
   creationTimestamp: null
   labels:
-    app: prod
-  name: prod
+    app: node-affinity
+  name: node-affinity
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: prod
+      app: node-affinity
   strategy: {}
   template:
     metadata:
       creationTimestamp: null
       labels:
-        app: prod
+        app: node-affinity
     spec:
       containers:
       - image: nginx:alpine

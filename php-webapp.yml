@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: php-webapp
+  name: php-webapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: php-webapp
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: php-webapp
+    spec:
+      containers:
+      - image: phpmyadmin
+        name: phpmyadmin
+        ports:
+        - containerPort: 80
+        resources: {}
+        env:
+        - name: PMA_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: mysql-configmap 
+              key: database
+status: {}
