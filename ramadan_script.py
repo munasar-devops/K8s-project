@@ -20,9 +20,9 @@ SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 
 # Email configurations:
-SENDER_EMAIL = "muneeh99@gmail.com"
-RECEIVER_EMAIL = "muneeh99@gmail.com"
-EMAIL_PASSWORD = "suni msnt vhuk yyav"
+SENDER_EMAIL = "gmail.com"
+RECEIVER_EMAIL = "@gmail.com"
+EMAIL_PASSWORD = ""
 
 server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
 server.starttls()  # Secure the connection
