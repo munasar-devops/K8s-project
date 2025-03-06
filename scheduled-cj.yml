@@ -2,21 +2,24 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   creationTimestamp: null
-  name: iftar-job
+  name: my-job
 spec:
   jobTemplate:
     metadata:
       creationTimestamp: null
-      name: iftar-job
+      name: my-job
     spec:
       template:
         metadata:
           creationTimestamp: null
         spec:
           containers:
-          - image: mabdi05/maghrib-notifier:latest
-            name: iftar-job
+          - image: busybox
+            name: my-job
+            command: ['expr', '3', '+', '2']
             resources: {}
-          restartPolicy: Never 
-  schedule: 0 0  * * *
+          restartPolicy: Never
+  schedule: '0 0 1 * *'
 status: {}
+
+
