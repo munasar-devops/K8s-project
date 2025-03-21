@@ -14,5 +14,5 @@ spec:
     name: busybox
     resources: {}
   dnsPolicy: ClusterFirst
-  restartPolicy: Always
+  restartPolicy: Never
 status: {}
