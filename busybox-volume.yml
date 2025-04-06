@@ -21,7 +21,10 @@ metadata:
   uid: afa06335-f4ef-4061-897c-0510a9d7b9d3
 spec:
   containers:
-  - command: ["/bin/sh", "-c", "while true; do echo 'running'; sleep 30; done"]
+  - command:
+    - /bin/sh
+    - -c
+    - echo Hello kubernetes! >> /data/k8s-config && while true; do sleep 30; done
     image: busybox
     imagePullPolicy: Always
     name: busybox-volume
