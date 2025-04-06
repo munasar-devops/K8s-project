@@ -24,7 +24,7 @@ spec:
   - command:
     - /bin/sh
     - -c
-    - echo Hello kubernetes! >> /data/k8s-config && while true; do sleep 30; done
+    - echo Hello kubernetes!, excited about the journey >> /data/k8s-config && tail -f /dev/null
     image: busybox
     imagePullPolicy: Always
     name: busybox-volume
